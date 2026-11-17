@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zglitchowany Kalkulator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            transition: background 0.1s;
+        }
+
+        /* Efekt glitcha całej strony */
+        body.glitch-active {
+            animation: bodyGlitch 0.2s infinite;
+        }
+
+        @keyframes bodyGlitch {
+            0% { transform: translate(0, 0); filter: hue-rotate(0deg); }
+            20% { transform: translate(-5px, 5px); filter: invert(1); }
+            40% { transform: translate(-5px, -5px); filter: hue-rotate(90deg); }
+            60% { transform: translate(5px, 5px); filter: hue-rotate(180deg); }
+            80% { transform: translate(5px, -5px); filter: invert(0.5); }
+            100% { transform: translate(0, 0); filter: hue-rotate(360deg); }
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 900px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-side {
+            flex: 1;
+            min-width: 320px;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        p.hint {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .equation-box {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.3rem;
+            background: #111;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            color: #4cd137;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Styl kalkulatora */
+        .calculator {
+            background: #2f3640;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            width: 250px;
+        }
+
+        .calc-screen {
+            width: 100%;
+            height: 45px;
+            background: #111;
+            color: #4cd137;
+            font-size: 1.1rem;
+            text-align: right;
+            padding: 5px 10px;
+            box-sizing: border-box;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .calc-btn {
+            padding: 12px;
+            font-size: 1rem;
+            background: #353b48;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .calc-btn:hover { background: #718093; }
+        .calc-btn.operator { background: #e1b12c; color: black; font-weight: bold; }
+        .calc-btn.operator:hover { background: #fbc531; }
+        .calc-btn.equals { background: #44bd32; color: white; font-weight: bold; grid-column: span 2; }
+        .calc-btn.equals:hover { background: #4cd137; }
+        .calc-btn.clear { background: #e84118; color: white; }
+        .calc-btn.clear:hover { background: #c23616; }
+
+        /* Nakładka z migającym obrazkiem przez 5 sekund */
+        #glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        #glitch-overlay img {
+            max-width: 80%;
+            max-height: 80%;
+            animation: imgFlicker 0.1s infinite;
+        }
+
+        @keyframes imgFlicker {
+            0% { opacity: 0.2; transform: scale(0.98) rotate(-1deg); }
+            50% { opacity: 1; transform: scale(1.02) rotate(1deg); }
+            100% { opacity: 0.4; transform: scale(1) rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Lewa strona: Równanie do wpisania -->
+        <div class="left-side">
+            <h1>Wpisz to równanie w kalkulator:</h1>
+            <p class="hint">Odtwórz dokładnie to działanie na przyciskach:</p>
+            <div class="equation-box" id="equation">
+                (7854 * 231) / (999 - 14) + 546
+            </div>
+        </div>
+
+        <!-- Prawa strona: Kalkulator -->
+        <div class="calculator">
+            <div class="calc-screen" id="screen">0</div>
+            <div class="calc-buttons">
+                <button class="calc-btn clear" onclick="clearScreen()">C</button>
+                <button class="calc-btn" onclick="appendValue('(')">(</button>
+                <button class="calc-btn" onclick="appendValue(')')">)</button>
+                <button class="calc-btn operator" onclick="appendValue('/')">/</button>
+
+                <button class="calc-btn" onclick="appendValue('7')">7</button>
+                <button class="calc-btn" onclick="appendValue('8')">8</button>
+                <button class="calc-btn" onclick="appendValue('9')">9</button>
+                <button class="calc-btn operator" onclick="appendValue('*')">*</button>
+
+                <button class="calc-btn" onclick="appendValue('4')">4</button>
+                <button class="calc-btn" onclick="appendValue('5')">5</button>
+                <button class="calc-btn" onclick="appendValue('6')">6</button>
+                <button class="calc-btn operator" onclick="appendValue('-')">-</button>
+
+                <button class="calc-btn" onclick="appendValue('1')">1</button>
+                <button class="calc-btn" onclick="appendValue('2')">2</button>
+                <button class="calc-btn" onclick="appendValue('3')">3</button>
+                <button class="calc-btn operator" onclick="appendValue('+')">+</button>
+
+                <button class="calc-btn" onclick="appendValue('0')">0</button>
+                <button class="calc-btn" onclick="appendValue('.')">.</button>
+                <button class="calc-btn equals" onclick="obliczRownanie()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ukryty overlay z migającym obrazkiem -->
+    <div id="glitch-overlay">
+        <img id="glitch-img" src="image.png" alt="Glitch">
+    </div>
+
+    <!-- Ukryty audio player -->
+    <audio id="glitch-sound" src="sound.mp3"></audio>
+
+    <script>
+        const rownania = [
+            "(7854 * 231) / (999 - 14) + 546",
+            "(5420 / 4) * (88 - 12) + 333 - 99",
+            "(9876 + 543) / (12 * 3) - 777 * 2",
+            "(4321 - 1234) * (55 / 5) + 8888 / 8",
+            "(1111 * 99) - (4567 + 891) / 3"
+        ];
+
+        let screen = document.getElementById("screen");
+        let isGlitching = false;
+        let waitingForClear = false;
+
+        function appendValue(val) {
+            if (isGlitching || waitingForClear) return;
+            if (screen.innerText === "0" || screen.innerText.includes("Błąd") || screen.innerText === "ERR") {
+                screen.innerText = val;
+            } else {
+                screen.innerText += val;
+            }
+        }
+
+        function clearScreen() {
+            if (isGlitching) return;
+            screen.innerText = "0";
+            waitingForClear = false;
+        }
+
+        function obliczRownanie() {
+            if (isGlitching || waitingForClear) return;
+            if (screen.innerText === "0") return;
+
+            // Pobieramy równanie i usuwamy wszystkie spacje, żeby porównanie zadziałało idealnie
+            let currentEquation = document.getElementById("equation").innerText.replace(/\s+/g, '');
+            let userTyped = screen.innerText.replace(/\s+/g, '');
+
+            if (userTyped === currentEquation) {
+                isGlitching = true;
+                
+                document.body.classList.add("glitch-active");
+                document.getElementById("glitch-overlay").style.display = "flex";
+                
+                let sound = document.getElementById("glitch-sound");
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Autoodtwarzanie dźwięku zablokowane."));
+
+                screen.innerText = "ERR";
+
+                setTimeout(() => {
+                    document.body.classList.remove("glitch-active");
+                    document.getElementById("glitch-overlay").style.display = "none";
+                    sound.pause();
+                    sound.currentTime = 0;
+
+                    let randomEq;
+                    do {
+                        randomEq = rownania[Math.floor(Math.random() * rownania.length)];
+                    } while (randomEq.replace(/\s+/g, '') === currentEquation && rownania.length > 1);
+                    
+                    document.getElementById("equation").innerText = randomEq;
+                    screen.innerText = "0";
+                    isGlitching = false;
+                }, 5000);
+
+            } else {
+                // Jeśli wpisano coś innego -> liczy wynik i czeka na C
+                try {
+                    let calcResult = eval(userTyped);
+                    if (isFinite(calcResult)) {
+                        screen.innerText = calcResult;
+                    } else {
+                        screen.innerText = "Error";
+                    }
+                } catch (error) {
+                    screen.innerText = "Błąd składni";
+                }
+                waitingForClear = true;
+            }
+        }
+    </script>
+
+</body>
+</html>
